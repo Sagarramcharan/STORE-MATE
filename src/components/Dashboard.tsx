@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Product, Sale, OperationType } from '../types';
 import { db } from '../firebase';
 import { collection, addDoc, updateDoc, doc, increment } from 'firebase/firestore';

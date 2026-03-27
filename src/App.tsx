@@ -253,7 +253,7 @@ export default function App() {
         return isAdmin ? (
           <AdminDashboard users={allUsers} allProducts={allProducts} allSales={allSales} />
         ) : (
-          <Dashboard products={products} sales={sales} />
+          <Dashboard products={products} sales={sales} onNavigate={setActiveTab} userId={user.uid} />
         );
     }
   };

@@ -21,10 +21,10 @@ const firebaseConfig: any = {
 // and if the API key is missing.
 if (import.meta.env.DEV && !firebaseConfig.apiKey) {
   try {
-    // We use a template string to hide the path from the bundler's static analysis
-    const configPath = '../firebase-applet-config.json';
-    // @ts-ignore
-    const config = await import(/* @vite-ignore */ configPath);
+    // We use a more obscure way to load the config to hide it from Vite's static analysis
+    // This prevents "Could not resolve" errors during the production build on Vercel
+    const loadLocal = new Function('return import("../firebase-applet-config.json")');
+    const config = await loadLocal();
     if (config && config.default) {
       Object.assign(firebaseConfig, config.default);
     }
