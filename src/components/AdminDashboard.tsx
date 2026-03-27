@@ -156,46 +156,77 @@ export default function AdminDashboard({ users, allProducts, allSales }: AdminDa
       </div>
 
       {/* Top Shops Table */}
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-stone-100 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-stone-900">Top Performing Shops</h2>
-          <button className="text-emerald-600 text-sm font-bold flex items-center gap-1 hover:underline">
-            View All Users <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-stone-50 text-stone-500 text-xs font-bold uppercase tracking-wider">
-                <th className="px-6 py-4">Shopkeeper</th>
-                <th className="px-6 py-4">Shop Name</th>
-                <th className="px-6 py-4">Products</th>
-                <th className="px-6 py-4">Sales</th>
-                <th className="px-6 py-4 text-right">Revenue</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {userStats.slice(0, 10).map((stat) => (
-                <tr key={stat.id} className="hover:bg-stone-50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="font-bold text-stone-900">{stat.name}</div>
-                    <div className="text-xs text-stone-400">{stat.email}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Store className="w-4 h-4 text-stone-400" />
-                      <span className="text-stone-600 font-medium">{stat.shopName || 'N/A'}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-stone-600">{stat.productCount}</td>
-                  <td className="px-6 py-4 text-stone-600">{stat.salesCount}</td>
-                  <td className="px-6 py-4 text-right font-bold text-emerald-600">
-                    ₹{stat.revenue.toLocaleString()}
-                  </td>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-stone-100 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-stone-900">Top Performing Shops</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-stone-50 text-stone-500 text-xs font-bold uppercase tracking-wider">
+                  <th className="px-6 py-4">Shop Name</th>
+                  <th className="px-6 py-4">Sales</th>
+                  <th className="px-6 py-4 text-right">Revenue</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {userStats.slice(0, 5).map((stat) => (
+                  <tr key={stat.id} className="hover:bg-stone-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-stone-900">{stat.shopName || 'N/A'}</div>
+                      <div className="text-xs text-stone-400">{stat.name}</div>
+                    </td>
+                    <td className="px-6 py-4 text-stone-600">{stat.salesCount}</td>
+                    <td className="px-6 py-4 text-right font-bold text-emerald-600">
+                      ₹{stat.revenue.toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-stone-100">
+            <h2 className="text-lg font-bold text-stone-900">Recent Global Activity</h2>
+          </div>
+          <div className="p-0">
+            <div className="divide-y divide-stone-100">
+              {allSales.slice(0, 8).map((sale) => {
+                const shop = users.find(u => u.id === sale.userId);
+                return (
+                  <div key={sale.id} className="p-4 hover:bg-stone-50 transition-colors flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-stone-100 p-2 rounded-full">
+                        <ShoppingCart className="w-4 h-4 text-stone-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-stone-900">
+                          {sale.productName} <span className="text-stone-400 font-normal">x{sale.quantity}</span>
+                        </p>
+                        <p className="text-xs text-stone-500">
+                          {shop?.shopName || 'Unknown Shop'} • {new Date(sale.timestamp).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-emerald-600">₹{sale.totalPrice.toLocaleString()}</p>
+                      <p className="text-[10px] text-stone-400 uppercase tracking-wider">
+                        {new Date(sale.timestamp).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+              {allSales.length === 0 && (
+                <div className="p-8 text-center text-stone-500">
+                  No sales activity recorded yet.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

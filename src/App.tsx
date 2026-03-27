@@ -44,12 +44,16 @@ export default function App() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [allSales, setAllSales] = useState<Sale[]>([]);
 
-  const isAdmin = user?.email === 'sagarsatapathy24@gmail.com';
+  const isAdmin = user?.email?.toLowerCase() === 'sagarsatapathy24@gmail.com';
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUser(user);
+        const isUserAdmin = user.email?.toLowerCase() === 'sagarsatapathy24@gmail.com';
+        if (isUserAdmin) {
+          setActiveTab('admin');
+        }
         await fetchUserProfile(user.uid, user.email!, user.displayName!);
       } else {
         setUser(null);
@@ -229,12 +233,10 @@ export default function App() {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'admin':
+        return <AdminDashboard users={allUsers} allProducts={allProducts} allSales={allSales} />;
       case 'dashboard':
-        return isAdmin ? (
-          <AdminDashboard users={allUsers} allProducts={allProducts} allSales={allSales} />
-        ) : (
-          <Dashboard products={products} sales={sales} />
-        );
+        return <Dashboard products={products} sales={sales} onNavigate={setActiveTab} userId={user.uid} />;
       case 'inventory':
         return <Inventory products={products} userId={user.uid} />;
       case 'sales':
@@ -255,19 +257,6 @@ export default function App() {
         );
     }
   };
-
-  const navItems = [
-    { id: 'dashboard', label: isAdmin ? 'Admin Dashboard' : 'Dashboard', icon: LayoutDashboard },
-    { id: 'inventory', label: 'Inventory', icon: Package },
-    { id: 'sales', label: 'Sales', icon: ShoppingCart },
-    { id: 'expiry', label: 'Expiry', icon: CalendarClock },
-    { id: 'reports', label: 'Reports', icon: BarChart3 },
-    { id: 'help', label: 'Help & Guide', icon: Sparkles },
-  ];
-
-  if (isAdmin) {
-    navItems.push({ id: 'users', label: 'Users', icon: UsersIcon });
-  }
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col lg:flex-row">
@@ -301,25 +290,71 @@ export default function App() {
           <span className="font-bold text-2xl text-stone-900 tracking-tight">Store Mate</span>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                setActiveTab(item.id);
-                setIsSidebarOpen(false);
-              }}
-              className={`
-                w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
-                ${activeTab === item.id 
-                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' 
-                  : 'text-stone-600 hover:bg-stone-100'}
-              `}
-            >
-              <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-stone-500'}`} />
-              {item.label}
-            </button>
-          ))}
+        <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
+          {isAdmin && (
+            <div className="space-y-2">
+              <p className="px-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Administration</p>
+              <button
+                onClick={() => {
+                  setActiveTab('admin');
+                  setIsSidebarOpen(false);
+                }}
+                className={`
+                  w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
+                  ${activeTab === 'admin' 
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' 
+                    : 'text-stone-600 hover:bg-stone-100'}
+                `}
+              >
+                <LayoutDashboard className={`w-5 h-5 ${activeTab === 'admin' ? 'text-white' : 'text-stone-500'}`} />
+                Admin Panel
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('users');
+                  setIsSidebarOpen(false);
+                }}
+                className={`
+                  w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
+                  ${activeTab === 'users' 
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' 
+                    : 'text-stone-600 hover:bg-stone-100'}
+                `}
+              >
+                <UsersIcon className={`w-5 h-5 ${activeTab === 'users' ? 'text-white' : 'text-stone-500'}`} />
+                Manage Users
+              </button>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <p className="px-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">My Store</p>
+            {[
+              { id: 'dashboard', label: 'My Dashboard', icon: BarChart3 },
+              { id: 'inventory', label: 'My Inventory', icon: Package },
+              { id: 'sales', label: 'My Sales', icon: ShoppingCart },
+              { id: 'expiry', label: 'Expiry Alerts', icon: CalendarClock },
+              { id: 'reports', label: 'My Reports', icon: BarChart3 },
+              { id: 'help', label: 'Help & Guide', icon: Sparkles },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setIsSidebarOpen(false);
+                }}
+                className={`
+                  w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
+                  ${activeTab === item.id 
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' 
+                    : 'text-stone-600 hover:bg-stone-100'}
+                `}
+              >
+                <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-stone-500'}`} />
+                {item.label}
+              </button>
+            ))}
+          </div>
         </nav>
 
         <div className="p-4 border-t border-stone-100">

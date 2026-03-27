@@ -1,10 +1,19 @@
-import { Product, Sale } from '../types';
+import { useState } from 'react';
+import { Product, Sale, OperationType } from '../types';
+import { db } from '../firebase';
+import { collection, addDoc, updateDoc, doc, increment } from 'firebase/firestore';
+import { handleFirestoreError } from '../utils/error-handler';
+import { toast } from 'react-hot-toast';
 import { 
   CalendarClock, 
   AlertTriangle,
   TrendingUp,
   Package,
-  ShoppingCart
+  ShoppingCart,
+  Plus,
+  ArrowRight,
+  Search,
+  CheckCircle2
 } from 'lucide-react';
 import { format, isBefore, addDays, startOfDay, endOfDay, subDays } from 'date-fns';
 import { 
@@ -20,9 +29,16 @@ import {
 interface DashboardProps {
   products: Product[];
   sales: Sale[];
+  onNavigate: (tab: string) => void;
+  userId: string;
 }
 
-export default function Dashboard({ products, sales }: DashboardProps) {
+export default function Dashboard({ products, sales, onNavigate, userId }: DashboardProps) {
+  const [saleSearch, setSaleSearch] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [saleQuantity, setSaleQuantity] = useState(1);
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const totalProducts = products.length;
   const lowStockProducts = products.filter(p => p.quantity <= (p.lowStockThreshold || 5));
   const expiringSoon = products.filter(p => {
@@ -41,6 +57,61 @@ export default function Dashboard({ products, sales }: DashboardProps) {
   });
 
   const todayRevenue = todaySales.reduce((acc, curr) => acc + curr.totalPrice, 0);
+
+  // Search for products for the quick sale
+  const searchResults = saleSearch.length > 1 
+    ? products.filter(p => p.name.toLowerCase().includes(saleSearch.toLowerCase())).slice(0, 5)
+    : [];
+
+  const handleQuickSale = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProduct || saleQuantity <= 0) return;
+    if (saleQuantity > selectedProduct.quantity) {
+      toast.error(`Not enough stock! Only ${selectedProduct.quantity} left.`);
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const saleData = {
+        productId: selectedProduct.id!,
+        productName: selectedProduct.name,
+        quantity: saleQuantity,
+        sellingPrice: selectedProduct.sellingPrice,
+        totalPrice: selectedProduct.sellingPrice * saleQuantity,
+        timestamp: new Date().toISOString(),
+        userId
+      };
+
+      // 1. Create sale record
+      await addDoc(collection(db, 'sales'), saleData);
+
+      // 2. Update product quantity
+      const productRef = doc(db, 'products', selectedProduct.id!);
+      await updateDoc(productRef, {
+        quantity: increment(-saleQuantity)
+      });
+
+      // Check for low stock alert
+      const newQuantity = selectedProduct.quantity - saleQuantity;
+      if (newQuantity <= (selectedProduct.lowStockThreshold || 5)) {
+        toast(`Low stock alert: ${selectedProduct.name} has only ${newQuantity} left!`, {
+          icon: '⚠️',
+          duration: 5000
+        });
+      }
+
+      toast.success(`Sold ${saleQuantity} ${selectedProduct.name}`);
+      setSaleSearch('');
+      setSelectedProduct(null);
+      setSaleQuantity(1);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'sales');
+      toast.error('Failed to process sale');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   // Prepare chart data for last 7 days
   const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -96,10 +167,105 @@ export default function Dashboard({ products, sales }: DashboardProps) {
           <h1 className="text-3xl font-bold text-stone-900">Dashboard</h1>
           <p className="text-stone-500">Welcome back! Here's what's happening with your store.</p>
         </div>
-        <div className="bg-white px-4 py-2 rounded-xl border border-stone-200 flex items-center gap-2 text-sm font-medium text-stone-600">
-          <CalendarClock className="w-4 h-4" />
-          {format(new Date(), 'MMMM d, yyyy')}
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => onNavigate('inventory')}
+            className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 active:scale-95 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Quick Add
+          </button>
+          <div className="bg-white px-4 py-2 rounded-xl border border-stone-200 flex items-center gap-2 text-sm font-medium text-stone-600">
+            <CalendarClock className="w-4 h-4" />
+            {format(new Date(), 'MMMM d, yyyy')}
+          </div>
         </div>
+      </div>
+
+      {/* Quick Sale Section */}
+      <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="bg-emerald-100 p-2 rounded-lg">
+            <ShoppingCart className="w-5 h-5 text-emerald-600" />
+          </div>
+          <h2 className="text-lg font-bold text-stone-900">Quick Sale Update</h2>
+        </div>
+        
+        <form onSubmit={handleQuickSale} className="flex flex-col lg:flex-row items-end gap-4">
+          <div className="flex-1 w-full space-y-2 relative">
+            <label className="text-xs font-bold text-stone-500 uppercase tracking-wider">Search Item</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+              <input
+                type="text"
+                placeholder="Type item name..."
+                value={selectedProduct ? selectedProduct.name : saleSearch}
+                onChange={(e) => {
+                  setSaleSearch(e.target.value);
+                  setSelectedProduct(null);
+                }}
+                className="w-full pl-10 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+              />
+              {searchResults.length > 0 && !selectedProduct && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-xl z-10 overflow-hidden">
+                  {searchResults.map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedProduct(p);
+                        setSaleSearch(p.name);
+                      }}
+                      className="w-full px-4 py-3 text-left hover:bg-stone-50 flex items-center justify-between border-b border-stone-50 last:border-0"
+                    >
+                      <div>
+                        <p className="font-bold text-stone-900">{p.name}</p>
+                        <p className="text-xs text-stone-500">{p.category} • {p.quantity} in stock</p>
+                      </div>
+                      <p className="font-bold text-emerald-600">₹{p.sellingPrice}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="w-full lg:w-32 space-y-2">
+            <label className="text-xs font-bold text-stone-500 uppercase tracking-wider">Quantity</label>
+            <input
+              type="number"
+              min="1"
+              value={saleQuantity}
+              onChange={(e) => setSaleQuantity(Number(e.target.value))}
+              className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+            />
+          </div>
+
+          <div className="w-full lg:w-48 space-y-2">
+            <label className="text-xs font-bold text-stone-500 uppercase tracking-wider">Total Price</label>
+            <div className="w-full px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl text-stone-600 font-bold">
+              ₹{(selectedProduct ? selectedProduct.sellingPrice * saleQuantity : 0).toLocaleString()}
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={!selectedProduct || isProcessing}
+            className={`
+              w-full lg:w-auto px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95
+              ${!selectedProduct || isProcessing 
+                ? 'bg-stone-100 text-stone-400 cursor-not-allowed' 
+                : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-100'}
+            `}
+          >
+            {isProcessing ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <CheckCircle2 className="w-5 h-5" />
+            )}
+            Update Sale
+          </button>
+        </form>
       </div>
 
       {/* Stats Grid */}
@@ -226,48 +392,94 @@ export default function Dashboard({ products, sales }: DashboardProps) {
         </div>
       </div>
 
-      {/* Recent Sales Table */}
-      <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-stone-100 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-stone-900">Recent Sales</h2>
-          <button className="text-emerald-600 text-sm font-bold hover:underline">View All</button>
+      {/* Recent Sales & Products */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Recent Sales Table */}
+        <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-stone-100 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-stone-900">Recent Sales</h2>
+            <button 
+              onClick={() => onNavigate('sales')}
+              className="text-emerald-600 text-sm font-bold hover:underline flex items-center gap-1"
+            >
+              View All <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-stone-50 text-stone-500 text-xs font-bold uppercase tracking-wider">
+                  <th className="px-6 py-4">Product</th>
+                  <th className="px-6 py-4">Qty</th>
+                  <th className="px-6 py-4">Total</th>
+                  <th className="px-6 py-4">Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {todaySales.slice(0, 5).map((sale) => (
+                  <tr key={sale.id} className="hover:bg-stone-50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-stone-900">{sale.productName}</td>
+                    <td className="px-6 py-4 text-stone-600">{sale.quantity}</td>
+                    <td className="px-6 py-4 font-bold text-stone-900">₹{sale.totalPrice}</td>
+                    <td className="px-6 py-4 text-stone-500 text-xs">{format(new Date(sale.timestamp), 'HH:mm')}</td>
+                  </tr>
+                ))}
+                {todaySales.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center">
+                      <p className="text-stone-400 text-sm italic">No sales today</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-stone-50 text-stone-500 text-xs font-bold uppercase tracking-wider">
-                <th className="px-6 py-4">Product</th>
-                <th className="px-6 py-4">Qty</th>
-                <th className="px-6 py-4">Price</th>
-                <th className="px-6 py-4">Total</th>
-                <th className="px-6 py-4">Time</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {todaySales.slice(0, 5).map((sale) => (
-                <tr key={sale.id} className="hover:bg-stone-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-stone-900">{sale.productName}</td>
-                  <td className="px-6 py-4 text-stone-600">{sale.quantity}</td>
-                  <td className="px-6 py-4 text-stone-600">₹{sale.sellingPrice}</td>
-                  <td className="px-6 py-4 font-bold text-stone-900">₹{sale.totalPrice}</td>
-                  <td className="px-6 py-4 text-stone-500 text-sm">{format(new Date(sale.timestamp), 'HH:mm')}</td>
+
+        {/* Recent Products Table */}
+        <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-stone-100 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-stone-900">Recent Products</h2>
+            <button 
+              onClick={() => onNavigate('inventory')}
+              className="text-emerald-600 text-sm font-bold hover:underline flex items-center gap-1"
+            >
+              Inventory <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-stone-50 text-stone-500 text-xs font-bold uppercase tracking-wider">
+                  <th className="px-6 py-4">Product</th>
+                  <th className="px-6 py-4">Category</th>
+                  <th className="px-6 py-4">Stock</th>
+                  <th className="px-6 py-4 text-right">Price</th>
                 </tr>
-              ))}
-              {todaySales.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center justify-center max-w-xs mx-auto">
-                      <div className="bg-stone-50 p-4 rounded-full mb-4">
-                        <ShoppingCart className="w-8 h-8 text-stone-300" />
-                      </div>
-                      <p className="text-stone-900 font-bold mb-1">No sales today</p>
-                      <p className="text-stone-500 text-sm">Once you start selling, your transactions will appear here in real-time.</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {products.slice(0, 5).map((product) => (
+                  <tr key={product.id} className="hover:bg-stone-50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-stone-900">{product.name}</td>
+                    <td className="px-6 py-4">
+                      <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded-full text-[10px] font-bold">
+                        {product.category}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-stone-600">{product.quantity}</td>
+                    <td className="px-6 py-4 text-right font-bold text-emerald-600">₹{product.sellingPrice}</td>
+                  </tr>
+                ))}
+                {products.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center">
+                      <p className="text-stone-400 text-sm italic">No products added yet</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

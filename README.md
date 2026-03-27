@@ -27,6 +27,45 @@ Store Mate is a professional inventory and sales management application designed
 - npm or yarn
 - Firebase Project
 
+### Installation
 
-   
+1. Clone the repository:
+   ```bash
+   git clone <your-repo-url>
+   cd store-mate
+   ```
 
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Create a `.env` file in the root directory and add your environment variables:
+   ```env
+   VITE_FIREBASE_API_KEY=your_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+   VITE_FIREBASE_PROJECT_ID=your_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
+   VITE_FIREBASE_DATABASE_ID=your_database_id
+   GEMINI_API_KEY=your_gemini_api_key
+   ```
+
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+## Deployment
+
+This project is optimized for deployment on **Vercel**.
+
+1. Push your code to GitHub.
+2. Connect your GitHub repository to Vercel.
+3. Add the environment variables listed above in the Vercel dashboard.
+4. Vercel will automatically build and deploy your application.
+
+## License
+
+This project is licensed under the MIT License.
