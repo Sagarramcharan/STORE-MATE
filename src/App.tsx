@@ -14,7 +14,8 @@ import {
   X,
   Store,
   Users as UsersIcon,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import { Product, Sale, UserProfile, OperationType } from './types';
 import { handleFirestoreError } from './utils/error-handler';
@@ -176,6 +177,31 @@ export default function App() {
       toast.error('Failed to log out');
     }
   };
+
+  if (!db || !auth) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-red-100">
+          <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertTriangle className="w-8 h-8" />
+          </div>
+          <h1 className="text-2xl font-bold text-stone-900 mb-4">Configuration Error</h1>
+          <p className="text-stone-600 mb-8">
+            The application could not connect to Firebase. This usually means the environment variables are missing in Vercel.
+          </p>
+          <div className="bg-stone-50 p-4 rounded-xl text-left text-sm font-mono text-stone-500 mb-8">
+            Check Vercel Project Settings &rarr; Environment Variables for VITE_FIREBASE_* keys.
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

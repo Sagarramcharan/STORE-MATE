@@ -19,23 +19,34 @@ const firebaseConfig: any = {
 // Fallback for local development (AI Studio)
 if (import.meta.env.DEV && !firebaseConfig.apiKey) {
   try {
-    // Using new Function to completely hide the string literal from Vite's static analysis.
-    // This prevents the "Could not resolve" error during production builds on Vercel.
-    const loadConfig = new Function('return import("../firebase-applet-config.json")');
-    const config = await loadConfig();
+    // We use a dynamic path to prevent Vite from trying to resolve this during production builds
+    const config = await import(/* @vite-ignore */ '../firebase-applet-config.json');
     if (config && config.default) {
       Object.assign(firebaseConfig, config.default);
     }
   } catch (e) {
-    // Expected if file is missing
+    // Expected if file is missing in production or local dev
   }
 }
 
 // Check if we have a valid config before initializing
-if (!firebaseConfig.apiKey) {
-  console.error('Firebase API Key is missing. Please check your environment variables.');
+const isConfigValid = !!firebaseConfig.apiKey;
+
+if (!isConfigValid) {
+  console.error('Firebase configuration is missing! Please ensure VITE_FIREBASE_* environment variables are set in Vercel.');
 }
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-export const auth = getAuth(app);
+// Initialize Firebase safely
+let app;
+try {
+  if (!getApps().length) {
+    app = initializeApp(firebaseConfig);
+  } else {
+    app = getApp();
+  }
+} catch (error) {
+  console.error('Failed to initialize Firebase:', error);
+}
+
+export const db = app ? getFirestore(app, firebaseConfig.firestoreDatabaseId) : null as any;
+export const auth = app ? getAuth(app) : null as any;
