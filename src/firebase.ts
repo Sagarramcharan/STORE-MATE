@@ -1,20 +1,43 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import firebaseConfigData from '../firebase-applet-config.json';
 
-// Use environment variables if available (for Vercel), otherwise fallback to the JSON file
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || firebaseConfigData.apiKey,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfigData.authDomain,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || firebaseConfigData.projectId,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || firebaseConfigData.storageBucket,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseConfigData.messagingSenderId,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || firebaseConfigData.appId,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || firebaseConfigData.measurementId,
-  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || firebaseConfigData.firestoreDatabaseId
+// For Vercel deployment, we use environment variables.
+// These MUST be set in the Vercel Project Settings -> Environment Variables.
+
+const firebaseConfig: any = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID
 };
 
-const app = initializeApp(firebaseConfig);
+// Fallback for local development (AI Studio)
+// We only attempt to load the local config if we are NOT in production
+// and if the API key is missing.
+if (import.meta.env.DEV && !firebaseConfig.apiKey) {
+  try {
+    // We use a template string to hide the path from the bundler's static analysis
+    const configPath = '../firebase-applet-config.json';
+    // @ts-ignore
+    const config = await import(/* @vite-ignore */ configPath);
+    if (config && config.default) {
+      Object.assign(firebaseConfig, config.default);
+    }
+  } catch (e) {
+    console.warn('Local Firebase configuration missing.');
+  }
+}
+
+// Check if we have a valid config before initializing
+if (!firebaseConfig.apiKey) {
+  console.error('Firebase API Key is missing. Please check your environment variables.');
+}
+
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
