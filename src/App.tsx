@@ -38,6 +38,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showShopSetup, setShowShopSetup] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
@@ -163,14 +164,23 @@ export default function App() {
   };
 
   const handleLogin = async () => {
-    if (!auth) return;
+    if (!auth || isLoggingIn) return;
+    setIsLoggingIn(true);
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       toast.success('Logged in successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      toast.error('Failed to log in');
+      if (error.code === 'auth/unauthorized-domain') {
+        toast.error('This domain is not authorized in Firebase Console. Please add your Vercel URL to the authorized domains list.');
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        toast.error('Login popup was closed before completion.');
+      } else {
+        toast.error('Failed to log in: ' + (error.message || 'Unknown error'));
+      }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -235,10 +245,17 @@ export default function App() {
           <div className="space-y-4">
             <button
               onClick={handleLogin}
-              className="w-full flex items-center justify-center gap-4 bg-stone-900 text-white py-5 px-8 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-xl active:scale-95 group"
+              disabled={isLoggingIn}
+              className={`w-full flex items-center justify-center gap-4 bg-stone-900 text-white py-5 px-8 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-xl active:scale-95 group ${isLoggingIn ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              <img src="https://www.google.com/favicon.ico" className="w-6 h-6 group-hover:scale-110 transition-transform" alt="Google" />
-              Continue with Google
+              {isLoggingIn ? (
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+              ) : (
+                <>
+                  <img src="https://www.google.com/favicon.ico" className="w-6 h-6 group-hover:scale-110 transition-transform" alt="Google" />
+                  Continue with Google
+                </>
+              )}
             </button>
             <p className="text-xs text-stone-400 font-medium">
               Secure login powered by Google Cloud.
