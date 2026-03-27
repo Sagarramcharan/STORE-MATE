@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { auth, db } from './firebase';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot, collection, query, where, orderBy } from 'firebase/firestore';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInAnonymously, linkWithPopup } from 'firebase/auth';
+import { doc, getDoc, setDoc, onSnapshot, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { Toaster, toast } from 'react-hot-toast';
 import { 
   LayoutDashboard, 
@@ -60,12 +60,15 @@ export default function App() {
         if (isUserAdmin) {
           setActiveTab('admin');
         }
-        await fetchUserProfile(user.uid, user.email!, user.displayName!);
+        await fetchUserProfile(user.uid, user.email || 'guest@storemate.app', user.displayName || 'Guest User');
       } else {
-        setUser(null);
-        setUserProfile(null);
-        setProducts([]);
-        setSales([]);
+        // Automatically sign in anonymously if not logged in
+        try {
+          await signInAnonymously(auth);
+        } catch (error) {
+          console.error('Anonymous sign-in failed:', error);
+          setLoading(false);
+        }
       }
       setLoading(false);
     });
@@ -168,14 +171,24 @@ export default function App() {
     setIsLoggingIn(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      toast.success('Logged in successfully!');
+      // If user is already anonymous, we can link the account to keep their data
+      if (user?.isAnonymous) {
+        await linkWithPopup(user, provider);
+        toast.success('Account linked successfully! Your data is now synced.');
+      } else {
+        await signInWithPopup(auth, provider);
+        toast.success('Logged in successfully!');
+      }
     } catch (error: any) {
       console.error('Login error:', error);
       if (error.code === 'auth/unauthorized-domain') {
         toast.error('This domain is not authorized in Firebase Console. Please add your Vercel URL to the authorized domains list.');
       } else if (error.code === 'auth/popup-closed-by-user') {
         toast.error('Login popup was closed before completion.');
+      } else if (error.code === 'auth/credential-already-in-use') {
+        // If the Google account is already linked to another user, just sign in
+        await signInWithPopup(auth, new GoogleAuthProvider());
+        toast.success('Logged in successfully!');
       } else {
         toast.error('Failed to log in: ' + (error.message || 'Unknown error'));
       }
@@ -188,7 +201,8 @@ export default function App() {
     if (!auth) return;
     try {
       await signOut(auth);
-      toast.success('Logged out successfully!');
+      // After logout, the onAuthStateChanged will trigger and sign in anonymously again
+      toast.success('Signed out. You are now in guest mode.');
     } catch (error) {
       console.error('Logout error:', error);
       toast.error('Failed to log out');
@@ -259,58 +273,8 @@ export default function App() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-stone-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 text-center border border-stone-200 animate-in fade-in slide-in-from-bottom-10 duration-700">
-          <div className="flex justify-center mb-8">
-            <div className="bg-emerald-600 p-5 rounded-3xl shadow-xl shadow-emerald-100 rotate-3 hover:rotate-0 transition-transform duration-300">
-              <Store className="w-14 h-14 text-white" />
-            </div>
-          </div>
-          <h1 className="text-4xl font-black text-stone-900 mb-3 tracking-tight">Store Mate</h1>
-          <p className="text-stone-500 mb-10 text-lg leading-relaxed">
-            The ultimate companion for modern shopkeepers. Manage inventory, track sales, and grow your business with ease.
-          </p>
-          
-          <div className="space-y-4">
-            <button
-              onClick={handleLogin}
-              disabled={isLoggingIn}
-              className={`w-full flex items-center justify-center gap-4 bg-stone-900 text-white py-5 px-8 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-xl active:scale-95 group ${isLoggingIn ? 'opacity-70 cursor-not-allowed' : ''}`}
-            >
-              {isLoggingIn ? (
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-              ) : (
-                <>
-                  <img src="https://www.google.com/favicon.ico" className="w-6 h-6 group-hover:scale-110 transition-transform" alt="Google" />
-                  Continue with Google
-                </>
-              )}
-            </button>
-            <p className="text-xs text-stone-400 font-medium">
-              Secure login powered by Google Cloud.
-            </p>
-          </div>
-          
-          <div className="mt-12 pt-8 border-t border-stone-100 grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-emerald-600 font-bold text-lg">Fast</div>
-              <div className="text-[10px] text-stone-400 uppercase font-bold">Setup</div>
-            </div>
-            <div className="text-center border-x border-stone-100">
-              <div className="text-emerald-600 font-bold text-lg">Secure</div>
-              <div className="text-[10px] text-stone-400 uppercase font-bold">Data</div>
-            </div>
-            <div className="text-center">
-              <div className="text-emerald-600 font-bold text-lg">Free</div>
-              <div className="text-[10px] text-stone-400 uppercase font-bold">Forever</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Remove the "if (!user)" check to allow anonymous access
+  // if (!user) { ... }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -441,16 +405,32 @@ export default function App() {
         <div className="p-4 border-t border-stone-100">
           <div className="bg-stone-50 rounded-2xl p-4 mb-4">
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">Shopkeeper</p>
-            <p className="text-sm font-bold text-stone-900 truncate">{userProfile?.name || user.displayName}</p>
-            <p className="text-xs text-stone-500 truncate">{userProfile?.shopName || 'My Store'}</p>
+            <p className="text-sm font-bold text-stone-900 truncate">
+              {user?.isAnonymous ? 'Guest User' : (userProfile?.name || user?.displayName)}
+            </p>
+            <p className="text-xs text-stone-500 truncate">
+              {user?.isAnonymous ? 'Local Session' : (userProfile?.shopName || 'My Store')}
+            </p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-600 hover:bg-red-50 transition-all"
-          >
-            <LogOut className="w-5 h-5" />
-            Sign Out
-          </button>
+          
+          {user?.isAnonymous ? (
+            <button
+              onClick={handleLogin}
+              disabled={isLoggingIn}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-emerald-600 hover:bg-emerald-50 transition-all"
+            >
+              <UsersIcon className="w-5 h-5" />
+              {isLoggingIn ? 'Connecting...' : 'Sync with Google'}
+            </button>
+          ) : (
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-600 hover:bg-red-50 transition-all"
+            >
+              <LogOut className="w-5 h-5" />
+              Sign Out
+            </button>
+          )}
         </div>
       </aside>
 
