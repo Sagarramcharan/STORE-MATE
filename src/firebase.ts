@@ -17,19 +17,17 @@ const firebaseConfig: any = {
 };
 
 // Fallback for local development (AI Studio)
-// We only attempt to load the local config if we are NOT in production
-// and if the API key is missing.
 if (import.meta.env.DEV && !firebaseConfig.apiKey) {
   try {
-    // We use a more obscure way to load the config to hide it from Vite's static analysis
-    // This prevents "Could not resolve" errors during the production build on Vercel
-    const loadLocal = new Function('return import("../firebase-applet-config.json")');
-    const config = await loadLocal();
+    // Using new Function to completely hide the string literal from Vite's static analysis.
+    // This prevents the "Could not resolve" error during production builds on Vercel.
+    const loadConfig = new Function('return import("../firebase-applet-config.json")');
+    const config = await loadConfig();
     if (config && config.default) {
       Object.assign(firebaseConfig, config.default);
     }
   } catch (e) {
-    console.warn('Local Firebase configuration missing.');
+    // Expected if file is missing
   }
 }
 
