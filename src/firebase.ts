@@ -5,7 +5,7 @@ import { getFirestore } from 'firebase/firestore';
 // For Vercel deployment, we use environment variables.
 // These MUST be set in the Vercel Project Settings -> Environment Variables.
 
-const firebaseConfig: any = {
+const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -18,10 +18,6 @@ const firebaseConfig: any = {
 
 // Check if we have a valid config before initializing
 const isConfigValid = !!firebaseConfig.apiKey;
-
-if (!isConfigValid) {
-  console.warn('Firebase configuration is missing! Please ensure VITE_FIREBASE_* environment variables are set in Vercel.');
-}
 
 // Initialize Firebase safely
 let app;
