@@ -198,23 +198,54 @@ export default function App() {
   if (!db || !auth) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-red-100">
-          <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertTriangle className="w-8 h-8" />
+        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full text-center border border-red-100 overflow-hidden">
+          <div className="bg-red-50 p-8">
+            <div className="w-16 h-16 bg-white text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+              <AlertTriangle className="w-8 h-8" />
+            </div>
+            <h1 className="text-2xl font-bold text-stone-900 mb-2">Firebase Connection Error</h1>
+            <p className="text-stone-600 text-sm">
+              The application failed to initialize Firebase. This usually happens when environment variables are missing or domains are not authorized.
+            </p>
           </div>
-          <h1 className="text-2xl font-bold text-stone-900 mb-4">Configuration Error</h1>
-          <p className="text-stone-600 mb-8">
-            The application could not connect to Firebase. This usually means the environment variables are missing in Vercel.
-          </p>
-          <div className="bg-stone-50 p-4 rounded-xl text-left text-sm font-mono text-stone-500 mb-8">
-            Check Vercel Project Settings &rarr; Environment Variables for VITE_FIREBASE_* keys.
+          
+          <div className="p-8 text-left">
+            <h2 className="font-bold text-stone-900 mb-4 flex items-center gap-2">
+              <span className="w-6 h-6 bg-stone-900 text-white rounded-full flex items-center justify-center text-xs">1</span>
+              Check Vercel Environment Variables
+            </h2>
+            <p className="text-stone-600 text-sm mb-4">
+              Ensure you have added all <code>VITE_FIREBASE_*</code> keys in your Vercel Project Settings.
+            </p>
+            
+            <h2 className="font-bold text-stone-900 mb-4 flex items-center gap-2">
+              <span className="w-6 h-6 bg-stone-900 text-white rounded-full flex items-center justify-center text-xs">2</span>
+              Authorize this Domain
+            </h2>
+            <p className="text-stone-600 text-sm mb-4">
+              If the login popup disappears, you must add this domain to the <b>Authorized Domains</b> list in your Firebase Console:
+            </p>
+            <div className="bg-stone-50 p-3 rounded-lg border border-stone-200 font-mono text-xs text-stone-500 mb-6 break-all">
+              {window.location.hostname}
+            </div>
+            
+            <div className="flex gap-3">
+              <button 
+                onClick={() => window.location.reload()}
+                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-100"
+              >
+                Retry Connection
+              </button>
+              <a 
+                href="https://console.firebase.google.com/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex-1 py-3 bg-stone-100 text-stone-900 rounded-xl font-bold hover:bg-stone-200 transition-colors text-center"
+              >
+                Open Console
+              </a>
+            </div>
           </div>
-          <button 
-            onClick={() => window.location.reload()}
-            className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors"
-          >
-            Retry Connection
-          </button>
         </div>
       </div>
     );
