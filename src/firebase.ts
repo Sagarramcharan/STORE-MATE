@@ -16,33 +16,22 @@ const firebaseConfig: any = {
   firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID
 };
 
-// Fallback for local development (AI Studio)
-if (import.meta.env.DEV && !firebaseConfig.apiKey) {
-  try {
-    // We use a dynamic path to prevent Vite from trying to resolve this during production builds
-    const config = await import(/* @vite-ignore */ '../firebase-applet-config.json');
-    if (config && config.default) {
-      Object.assign(firebaseConfig, config.default);
-    }
-  } catch (e) {
-    // Expected if file is missing in production or local dev
-  }
-}
-
 // Check if we have a valid config before initializing
 const isConfigValid = !!firebaseConfig.apiKey;
 
 if (!isConfigValid) {
-  console.error('Firebase configuration is missing! Please ensure VITE_FIREBASE_* environment variables are set in Vercel.');
+  console.warn('Firebase configuration is missing! Please ensure VITE_FIREBASE_* environment variables are set in Vercel.');
 }
 
 // Initialize Firebase safely
 let app;
 try {
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApp();
+  if (isConfigValid) {
+    if (!getApps().length) {
+      app = initializeApp(firebaseConfig);
+    } else {
+      app = getApp();
+    }
   }
 } catch (error) {
   console.error('Failed to initialize Firebase:', error);

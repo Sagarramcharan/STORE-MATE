@@ -48,6 +48,10 @@ export default function App() {
   const isAdmin = user?.email?.toLowerCase() === 'sagarsatapathy24@gmail.com';
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUser(user);
@@ -68,7 +72,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !db) return;
 
     // Fetch user-specific data
     const productsQuery = query(
@@ -132,6 +136,7 @@ export default function App() {
   }, [user, isAdmin]);
 
   const fetchUserProfile = async (uid: string, email: string, name: string) => {
+    if (!db) return;
     try {
       const userDoc = await getDoc(doc(db, 'users', uid));
       if (userDoc.exists()) {
@@ -158,6 +163,7 @@ export default function App() {
   };
 
   const handleLogin = async () => {
+    if (!auth) return;
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
@@ -169,6 +175,7 @@ export default function App() {
   };
 
   const handleLogout = async () => {
+    if (!auth) return;
     try {
       await signOut(auth);
       toast.success('Logged out successfully!');
