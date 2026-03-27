@@ -2,9 +2,7 @@ import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// For Vercel deployment, we use environment variables.
-// These MUST be set in the Vercel Project Settings -> Environment Variables.
-
+// Firebase configuration using Vite environment variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -16,22 +14,10 @@ const firebaseConfig = {
   firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID
 };
 
-// Check if we have a valid config before initializing
-const isConfigValid = !!firebaseConfig.apiKey;
-
-// Initialize Firebase safely
-let app;
-try {
-  if (isConfigValid) {
-    if (!getApps().length) {
-      app = initializeApp(firebaseConfig);
-    } else {
-      app = getApp();
-    }
-  }
-} catch (error) {
-  console.error('Failed to initialize Firebase:', error);
-}
+// Initialize Firebase
+const app = (getApps().length === 0 && firebaseConfig.apiKey) 
+  ? initializeApp(firebaseConfig) 
+  : (getApps().length > 0 ? getApp() : null);
 
 export const db = app ? getFirestore(app, firebaseConfig.firestoreDatabaseId) : null as any;
 export const auth = app ? getAuth(app) : null as any;
