@@ -338,23 +338,23 @@ export default function App() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-stone-50 p-4">
         <Toaster position="top-right" />
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-stone-200 animate-in fade-in slide-in-from-bottom-10 duration-700">
-          <div className="bg-emerald-600 p-10 text-center relative overflow-hidden">
+        <div className="max-w-md w-full bg-white rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden border border-stone-200 animate-in fade-in slide-in-from-bottom-10 duration-700">
+          <div className="bg-emerald-600 p-6 lg:p-10 text-center relative overflow-hidden">
             <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16 blur-3xl"></div>
-              <div className="absolute bottom-0 right-0 w-32 h-32 bg-white rounded-full translate-x-16 translate-y-16 blur-3xl"></div>
+              <div className="absolute top-0 left-0 w-24 h-24 lg:w-32 lg:h-32 bg-white rounded-full -translate-x-12 -translate-y-12 lg:-translate-x-16 lg:-translate-y-16 blur-3xl"></div>
+              <div className="absolute bottom-0 right-0 w-24 h-24 lg:w-32 lg:h-32 bg-white rounded-full translate-x-12 translate-y-12 lg:translate-x-16 lg:translate-y-16 blur-3xl"></div>
             </div>
-            <div className="relative z-10 flex justify-center mb-6">
-              <div className="bg-white/20 p-4 rounded-2xl backdrop-blur-sm border border-white/30 rotate-3 hover:rotate-0 transition-transform duration-300 shadow-xl shadow-emerald-900/20">
-                <Store className="w-12 h-12 text-white" />
+            <div className="relative z-10 flex justify-center mb-4 lg:mb-6">
+              <div className="bg-white/20 p-3 lg:p-4 rounded-xl lg:rounded-2xl backdrop-blur-sm border border-white/30 rotate-3 hover:rotate-0 transition-transform duration-300 shadow-xl shadow-emerald-900/20">
+                <Store className="w-8 h-8 lg:w-12 lg:h-12 text-white" />
               </div>
             </div>
-            <h1 className="relative z-10 text-3xl font-black text-white tracking-tight">Store Mate</h1>
-            <p className="relative z-10 text-emerald-100 mt-2 font-medium">Your ultimate shop companion</p>
+            <h1 className="relative z-10 text-2xl lg:text-3xl font-black text-white tracking-tight">Store Mate</h1>
+            <p className="relative z-10 text-emerald-100 mt-1 lg:mt-2 font-medium text-sm lg:text-base">Your ultimate shop companion</p>
           </div>
 
-          <div className="p-8">
-            <h2 className="text-2xl font-bold text-stone-900 mb-6 text-center">
+          <div className="p-6 lg:p-8">
+            <h2 className="text-xl lg:text-2xl font-bold text-stone-900 mb-4 lg:mb-6 text-center">
               {isSignUp ? 'Create your account' : 'Welcome back!'}
             </h2>
 
@@ -453,18 +453,18 @@ export default function App() {
             </div>
           </div>
 
-          <div className="bg-stone-50 p-6 border-t border-stone-100 grid grid-cols-3 gap-4">
+          <div className="bg-stone-50 p-4 lg:p-6 border-t border-stone-100 grid grid-cols-3 gap-2 lg:gap-4">
             <div className="text-center">
-              <div className="text-emerald-600 font-bold text-lg">Fast</div>
-              <div className="text-[10px] text-stone-400 uppercase font-bold">Setup</div>
+              <div className="text-emerald-600 font-bold text-base lg:text-lg">Fast</div>
+              <div className="text-[8px] lg:text-[10px] text-stone-400 uppercase font-bold">Setup</div>
             </div>
             <div className="text-center border-x border-stone-100">
-              <div className="text-emerald-600 font-bold text-lg">Secure</div>
-              <div className="text-[10px] text-stone-400 uppercase font-bold">Data</div>
+              <div className="text-emerald-600 font-bold text-base lg:text-lg">Secure</div>
+              <div className="text-[8px] lg:text-[10px] text-stone-400 uppercase font-bold">Data</div>
             </div>
             <div className="text-center">
-              <div className="text-emerald-600 font-bold text-lg">Free</div>
-              <div className="text-[10px] text-stone-400 uppercase font-bold">Forever</div>
+              <div className="text-emerald-600 font-bold text-base lg:text-lg">Free</div>
+              <div className="text-[8px] lg:text-[10px] text-stone-400 uppercase font-bold">Forever</div>
             </div>
           </div>
         </div>
@@ -504,26 +504,43 @@ export default function App() {
       <Toaster position="top-right" />
       
       {/* Mobile Header */}
-      <header className="lg:hidden bg-white border-b border-stone-200 p-4 flex items-center justify-between sticky top-0 z-50">
+      <header className="lg:hidden bg-white border-b border-stone-200 px-4 py-3 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-2">
-          <Store className="w-6 h-6 text-emerald-600" />
-          <span className="font-bold text-xl text-stone-900">Store Mate</span>
+          <div className="bg-emerald-100 p-1.5 rounded-lg">
+            <Store className="w-5 h-5 text-emerald-600" />
+          </div>
+          <span className="font-bold text-lg text-stone-900 tracking-tight">Store Mate</span>
         </div>
         <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 text-stone-600 hover:bg-stone-100 rounded-lg"
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 text-stone-600 hover:bg-stone-100 rounded-xl transition-colors"
         >
-          {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          <Menu className="w-6 h-6" />
         </button>
       </header>
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-0 z-40 lg:relative lg:z-0
+        fixed inset-y-0 left-0 z-50 w-[280px] lg:w-72 bg-white border-r border-stone-200 flex flex-col
         transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
         transition-transform duration-300 ease-in-out
-        w-72 bg-white border-r border-stone-200 flex flex-col
       `}>
+        {/* Sidebar Header (Mobile only) */}
+        <div className="p-4 flex items-center justify-between border-b border-stone-100 lg:hidden">
+          <div className="flex items-center gap-2">
+            <div className="bg-emerald-100 p-1.5 rounded-lg">
+              <Store className="w-5 h-5 text-emerald-600" />
+            </div>
+            <span className="font-bold text-lg text-stone-900 tracking-tight">Store Mate</span>
+          </div>
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            className="p-2 text-stone-600 hover:bg-stone-100 rounded-xl transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
         <div className="p-6 hidden lg:flex items-center gap-3 border-b border-stone-100">
           <div className="bg-emerald-100 p-2 rounded-xl">
             <Store className="w-6 h-6 text-emerald-600" />
@@ -531,9 +548,9 @@ export default function App() {
           <span className="font-bold text-2xl text-stone-900 tracking-tight">Store Mate</span>
         </div>
 
-        <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
+        <nav className="flex-1 p-3 lg:p-4 space-y-4 lg:space-y-6 overflow-y-auto">
           {isAdmin && (
-            <div className="space-y-2">
+            <div className="space-y-1 lg:space-y-2">
               <p className="px-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Administration</p>
               <button
                 onClick={() => {
@@ -541,13 +558,13 @@ export default function App() {
                   setIsSidebarOpen(false);
                 }}
                 className={`
-                  w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
+                  w-full flex items-center gap-3 px-4 py-2.5 lg:py-3 rounded-xl font-medium transition-all text-sm lg:text-base
                   ${activeTab === 'admin' 
                     ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' 
                     : 'text-stone-600 hover:bg-stone-100'}
                 `}
               >
-                <LayoutDashboard className={`w-5 h-5 ${activeTab === 'admin' ? 'text-white' : 'text-stone-500'}`} />
+                <LayoutDashboard className={`w-4 h-4 lg:w-5 lg:h-5 ${activeTab === 'admin' ? 'text-white' : 'text-stone-500'}`} />
                 Admin Panel
               </button>
               <button
@@ -556,19 +573,19 @@ export default function App() {
                   setIsSidebarOpen(false);
                 }}
                 className={`
-                  w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
+                  w-full flex items-center gap-3 px-4 py-2.5 lg:py-3 rounded-xl font-medium transition-all text-sm lg:text-base
                   ${activeTab === 'users' 
                     ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' 
                     : 'text-stone-600 hover:bg-stone-100'}
                 `}
               >
-                <UsersIcon className={`w-5 h-5 ${activeTab === 'users' ? 'text-white' : 'text-stone-500'}`} />
+                <UsersIcon className={`w-4 h-4 lg:w-5 lg:h-5 ${activeTab === 'users' ? 'text-white' : 'text-stone-500'}`} />
                 Manage Users
               </button>
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="space-y-1 lg:space-y-2">
             <p className="px-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">My Store</p>
             {[
               { id: 'dashboard', label: 'My Dashboard', icon: BarChart3 },
@@ -585,35 +602,35 @@ export default function App() {
                   setIsSidebarOpen(false);
                 }}
                 className={`
-                  w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
+                  w-full flex items-center gap-3 px-4 py-2.5 lg:py-3 rounded-xl font-medium transition-all text-sm lg:text-base
                   ${activeTab === item.id 
                     ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' 
                     : 'text-stone-600 hover:bg-stone-100'}
                 `}
               >
-                <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'text-stone-500'}`} />
+                <item.icon className={`w-4 h-4 lg:w-5 lg:h-5 ${activeTab === item.id ? 'text-white' : 'text-stone-500'}`} />
                 {item.label}
               </button>
             ))}
           </div>
         </nav>
 
-        <div className="p-4 border-t border-stone-100">
-          <div className="bg-stone-50 rounded-2xl p-4 mb-4">
-            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">Shopkeeper</p>
-            <p className="text-sm font-bold text-stone-900 truncate">
+        <div className="p-3 lg:p-4 border-t border-stone-100">
+          <div className="bg-stone-50 rounded-xl lg:rounded-2xl p-3 lg:p-4 mb-3 lg:mb-4">
+            <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-1 lg:mb-2">Shopkeeper</p>
+            <p className="text-xs lg:text-sm font-bold text-stone-900 truncate">
               {userProfile?.name || user?.displayName || 'User'}
             </p>
-            <p className="text-xs text-stone-500 truncate">
+            <p className="text-[10px] lg:text-xs text-stone-500 truncate">
               {userProfile?.shopName || 'My Store'}
             </p>
           </div>
           
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-600 hover:bg-red-50 transition-all"
+            className="w-full flex items-center gap-3 px-4 py-2.5 lg:py-3 rounded-xl font-medium text-red-600 hover:bg-red-50 transition-all text-sm lg:text-base"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4 h-4 lg:w-5 lg:h-5" />
             Sign Out
           </button>
         </div>
@@ -622,7 +639,7 @@ export default function App() {
       {/* Overlay for mobile sidebar */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 lg:hidden"
+          className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-45 lg:hidden animate-in fade-in duration-300"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}

@@ -108,39 +108,39 @@ export default function Sales({ products, sales, userId }: SalesProps) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-500">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8 animate-in fade-in duration-500">
       {/* Product Selection */}
-      <div className="lg:col-span-2 space-y-6">
+      <div className="lg:col-span-2 space-y-4 lg:space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-stone-900">New Sale</h1>
-          <p className="text-stone-500">Select products to add to the cart.</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-stone-900">New Sale</h1>
+          <p className="text-sm text-stone-500">Select products to add to the cart.</p>
         </div>
 
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 text-stone-400" />
           <input
             type="text"
-            placeholder="Search products by name or barcode..."
+            placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 bg-white border border-stone-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all"
+            className="w-full pl-10 lg:pl-12 pr-4 py-3 lg:py-4 bg-white border border-stone-200 rounded-xl lg:rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm transition-all text-sm"
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
           {filteredProducts.map(product => (
             <button
               key={product.id}
               onClick={() => addToCart(product)}
-              className="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all text-left flex items-center justify-between group active:scale-95"
+              className="bg-white p-3 lg:p-4 rounded-xl lg:rounded-2xl border border-stone-200 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all text-left flex items-center justify-between group active:scale-95"
             >
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-stone-900 truncate">{product.name}</p>
-                <p className="text-xs text-stone-500">{product.category} • Stock: {product.quantity}</p>
-                <p className="text-emerald-600 font-bold mt-1">₹{product.sellingPrice}</p>
+                <p className="font-bold text-stone-900 truncate text-sm lg:text-base">{product.name}</p>
+                <p className="text-[10px] lg:text-xs text-stone-500">{product.category} • Stock: {product.quantity}</p>
+                <p className="text-emerald-600 font-bold mt-0.5 lg:mt-1 text-sm lg:text-base">₹{product.sellingPrice}</p>
               </div>
-              <div className="bg-stone-50 group-hover:bg-emerald-50 p-3 rounded-xl transition-colors">
-                <Plus className="w-5 h-5 text-stone-400 group-hover:text-emerald-600" />
+              <div className="bg-stone-50 group-hover:bg-emerald-50 p-2 lg:p-3 rounded-lg lg:rounded-xl transition-colors">
+                <Plus className="w-4 h-4 lg:w-5 lg:h-5 text-stone-400 group-hover:text-emerald-600" />
               </div>
             </button>
           ))}
@@ -171,84 +171,84 @@ export default function Sales({ products, sales, userId }: SalesProps) {
       </div>
 
       {/* Cart & Checkout */}
-      <div className="space-y-6">
-        <div className="bg-white rounded-2xl border border-stone-200 shadow-xl flex flex-col h-[calc(100vh-12rem)] sticky top-8">
-          <div className="p-6 border-b border-stone-100 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-stone-900 flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-emerald-600" />
+      <div className="space-y-4 lg:space-y-6">
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-stone-200 shadow-xl flex flex-col h-auto lg:h-[calc(100vh-12rem)] sticky top-8">
+          <div className="p-4 lg:p-6 border-b border-stone-100 flex items-center justify-between">
+            <h2 className="text-base lg:text-lg font-bold text-stone-900 flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4 lg:w-5 lg:h-5 text-emerald-600" />
               Current Cart
             </h2>
-            <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-full">
+            <span className="bg-emerald-100 text-emerald-700 text-[10px] lg:text-xs font-bold px-2 py-1 rounded-full">
               {cart.length} Items
             </span>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 lg:space-y-4 max-h-[40vh] lg:max-h-none">
             {cart.map(item => (
-              <div key={item.product.id} className="bg-stone-50 p-4 rounded-xl space-y-3">
+              <div key={item.product.id} className="bg-stone-50 p-3 lg:p-4 rounded-xl space-y-2 lg:space-y-3">
                 <div className="flex justify-between items-start">
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-stone-900 truncate">{item.product.name}</p>
-                    <p className="text-xs text-stone-500">₹{item.product.sellingPrice} each</p>
+                    <p className="font-bold text-stone-900 truncate text-xs lg:text-sm">{item.product.name}</p>
+                    <p className="text-[10px] lg:text-xs text-stone-500">₹{item.product.sellingPrice} each</p>
                   </div>
                   <button 
                     onClick={() => removeFromCart(item.product.id!)}
                     className="text-stone-400 hover:text-red-600 transition-colors"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                   </button>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 bg-white border border-stone-200 rounded-lg p-1">
+                  <div className="flex items-center gap-2 lg:gap-3 bg-white border border-stone-200 rounded-lg p-1">
                     <button 
                       onClick={() => updateQuantity(item.product.id!, -1)}
                       className="p-1 hover:bg-stone-100 rounded transition-colors"
                     >
-                      <Minus className="w-4 h-4" />
+                      <Minus className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                     </button>
-                    <span className="font-bold text-stone-900 w-8 text-center">{item.quantity}</span>
+                    <span className="font-bold text-stone-900 w-6 lg:w-8 text-center text-xs lg:text-sm">{item.quantity}</span>
                     <button 
                       onClick={() => updateQuantity(item.product.id!, 1)}
                       className="p-1 hover:bg-stone-100 rounded transition-colors"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
                     </button>
                   </div>
-                  <p className="font-bold text-stone-900">₹{item.product.sellingPrice * item.quantity}</p>
+                  <p className="font-bold text-stone-900 text-xs lg:text-sm">₹{item.product.sellingPrice * item.quantity}</p>
                 </div>
               </div>
             ))}
             {cart.length === 0 && (
-              <div className="h-full flex flex-col items-center justify-center text-stone-400 text-center p-8">
-                <div className="bg-stone-50 p-4 rounded-full mb-4">
-                  <ShoppingCart className="w-8 h-8 opacity-20" />
+              <div className="h-full flex flex-col items-center justify-center text-stone-400 text-center p-6 lg:p-8">
+                <div className="bg-stone-50 p-3 lg:p-4 rounded-full mb-3 lg:mb-4">
+                  <ShoppingCart className="w-6 h-6 lg:w-8 lg:h-8 opacity-20" />
                 </div>
-                <p className="font-medium">Your cart is empty</p>
-                <p className="text-xs">Add products from the list to start a sale</p>
+                <p className="font-medium text-sm">Your cart is empty</p>
+                <p className="text-[10px] lg:text-xs">Add products to start a sale</p>
               </div>
             )}
           </div>
 
-          <div className="p-6 bg-stone-50 border-t border-stone-100 space-y-4">
+          <div className="p-4 lg:p-6 bg-stone-50 border-t border-stone-100 space-y-3 lg:space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-stone-500 font-medium">Total Amount</span>
-              <span className="text-2xl font-bold text-stone-900">₹{cartTotal.toLocaleString()}</span>
+              <span className="text-stone-500 font-medium text-sm lg:text-base">Total Amount</span>
+              <span className="text-xl lg:text-2xl font-bold text-stone-900">₹{cartTotal.toLocaleString()}</span>
             </div>
             <button
               disabled={cart.length === 0 || isProcessing}
               onClick={handleCheckout}
               className={`
-                w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg
+                w-full py-3 lg:py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg text-sm
                 ${cart.length === 0 || isProcessing
                   ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
                   : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-100 active:scale-95'}
               `}
             >
               {isProcessing ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <div className="animate-spin rounded-full h-4 w-4 lg:h-5 lg:w-5 border-b-2 border-white"></div>
               ) : (
                 <>
-                  <CheckCircle2 className="w-5 h-5" />
+                  <CheckCircle2 className="w-4 h-4 lg:w-5 lg:h-5" />
                   Complete Sale
                 </>
               )}
