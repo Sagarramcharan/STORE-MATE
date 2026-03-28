@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db } from './firebase';
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
+import { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  updateProfile,
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup
+} from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot, collection, query, where, orderBy, getDocs, updateDoc } from 'firebase/firestore';
 import { Toaster, toast } from 'react-hot-toast';
 import { 
@@ -15,7 +24,11 @@ import {
   Store,
   Users as UsersIcon,
   Sparkles,
-  AlertTriangle
+  AlertTriangle,
+  Mail,
+  Lock,
+  User as UserIcon,
+  Chrome
 } from 'lucide-react';
 import { Product, Sale, UserProfile, OperationType } from './types';
 import { handleFirestoreError } from './utils/error-handler';
@@ -177,7 +190,6 @@ export default function App() {
       if (isSignUp) {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(userCredential.user, { displayName: name });
-        // Profile will be created in fetchUserProfile called by onAuthStateChanged
         toast.success('Account created successfully!');
       } else {
         await signInWithEmailAndPassword(auth, email, password);
@@ -185,9 +197,46 @@ export default function App() {
       }
     } catch (error: any) {
       console.error('Auth error:', error);
-      toast.error(error.message || 'Authentication failed');
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error('This email is already registered. Please sign in instead.');
+      } else if (error.code === 'auth/wrong-password') {
+        toast.error('Incorrect password. Please try again or reset it.');
+      } else if (error.code === 'auth/user-not-found') {
+        toast.error('No account found with this email. Please sign up.');
+      } else {
+        toast.error(error.message || 'Authentication failed');
+      }
     } finally {
       setIsLoggingIn(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    if (!auth || isLoggingIn) return;
+    setIsLoggingIn(true);
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      toast.success('Logged in with Google!');
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      toast.error(error.message || 'Google login failed');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!auth || !email) {
+      toast.error('Please enter your email address first.');
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toast.success('Password reset email sent! Please check your inbox.');
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      toast.error(error.message || 'Failed to send reset email');
     }
   };
 
@@ -313,37 +362,57 @@ export default function App() {
               {isSignUp && (
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="John Doe"
-                    className="w-full px-5 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                  />
+                  <div className="relative">
+                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="John Doe"
+                      className="w-full pl-12 pr-5 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                    />
+                  </div>
                 </div>
               )}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Email Address</label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full px-5 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                />
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full pl-12 pr-5 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                  />
+                </div>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Password</label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-5 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
-                />
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Password</label>
+                  {!isSignUp && (
+                    <button 
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="text-[10px] font-bold text-emerald-600 hover:underline"
+                    >
+                      Forgot Password?
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-12 pr-5 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                  />
+                </div>
               </div>
 
               <button
@@ -358,6 +427,21 @@ export default function App() {
                 )}
               </button>
             </form>
+
+            <div className="mt-4 flex items-center gap-4">
+              <div className="flex-1 h-px bg-stone-200"></div>
+              <span className="text-xs font-bold text-stone-400 uppercase tracking-widest">OR</span>
+              <div className="flex-1 h-px bg-stone-200"></div>
+            </div>
+
+            <button
+              onClick={handleGoogleLogin}
+              disabled={isLoggingIn}
+              className="w-full mt-4 bg-white border border-stone-200 text-stone-700 py-3 px-6 rounded-xl font-bold hover:bg-stone-50 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-95"
+            >
+              <Chrome className="w-5 h-5 text-emerald-600" />
+              Continue with Google
+            </button>
 
             <div className="mt-8 text-center">
               <button
