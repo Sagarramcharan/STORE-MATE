@@ -103,7 +103,8 @@ service cloud.firestore {
       return data.keys().hasAll(['name', 'email', 'role']) &&
              data.name is string && data.name.size() > 0 &&
              data.email is string && isValidEmail(data.email) &&
-             data.role == 'admin';
+             (data.role == 'admin' || data.role == 'user') &&
+             (!('shopName' in data) || (data.shopName is string && data.shopName.size() < 100));
     }
 
     // ===============================================================

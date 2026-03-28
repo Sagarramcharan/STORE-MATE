@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { auth, db } from './firebase';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut, signInAnonymously, linkWithPopup } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
+import { doc, getDoc, setDoc, onSnapshot, collection, query, where, orderBy, getDocs, updateDoc } from 'firebase/firestore';
 import { Toaster, toast } from 'react-hot-toast';
 import { 
   LayoutDashboard, 
@@ -39,6 +39,12 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showShopSetup, setShowShopSetup] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [shopNameInput, setShopNameInput] = useState('');
+  const [isSettingUpShop, setIsSettingUpShop] = useState(false);
   
   const [products, setProducts] = useState<Product[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
@@ -60,15 +66,12 @@ export default function App() {
         if (isUserAdmin) {
           setActiveTab('admin');
         }
-        await fetchUserProfile(user.uid, user.email || 'guest@storemate.app', user.displayName || 'Guest User');
+        await fetchUserProfile(user.uid, user.email || '', user.displayName || 'User');
       } else {
-        // Automatically sign in anonymously if not logged in
-        try {
-          await signInAnonymously(auth);
-        } catch (error) {
-          console.error('Anonymous sign-in failed:', error);
-          setLoading(false);
-        }
+        setUser(null);
+        setUserProfile(null);
+        setProducts([]);
+        setSales([]);
       }
       setLoading(false);
     });
@@ -166,34 +169,44 @@ export default function App() {
     }
   };
 
-  const handleLogin = async () => {
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!auth || isLoggingIn) return;
     setIsLoggingIn(true);
     try {
-      const provider = new GoogleAuthProvider();
-      // If user is already anonymous, we can link the account to keep their data
-      if (user?.isAnonymous) {
-        await linkWithPopup(user, provider);
-        toast.success('Account linked successfully! Your data is now synced.');
+      if (isSignUp) {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCredential.user, { displayName: name });
+        // Profile will be created in fetchUserProfile called by onAuthStateChanged
+        toast.success('Account created successfully!');
       } else {
-        await signInWithPopup(auth, provider);
+        await signInWithEmailAndPassword(auth, email, password);
         toast.success('Logged in successfully!');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
-      if (error.code === 'auth/unauthorized-domain') {
-        toast.error('This domain is not authorized in Firebase Console. Please add your Vercel URL to the authorized domains list.');
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        toast.error('Login popup was closed before completion.');
-      } else if (error.code === 'auth/credential-already-in-use') {
-        // If the Google account is already linked to another user, just sign in
-        await signInWithPopup(auth, new GoogleAuthProvider());
-        toast.success('Logged in successfully!');
-      } else {
-        toast.error('Failed to log in: ' + (error.message || 'Unknown error'));
-      }
+      console.error('Auth error:', error);
+      toast.error(error.message || 'Authentication failed');
     } finally {
       setIsLoggingIn(false);
+    }
+  };
+
+  const handleShopSetup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !user || !shopNameInput) return;
+    setIsSettingUpShop(true);
+    try {
+      await updateDoc(doc(db, 'users', user.uid), {
+        shopName: shopNameInput
+      });
+      setUserProfile(prev => prev ? { ...prev, shopName: shopNameInput } : null);
+      setShowShopSetup(false);
+      toast.success(`Welcome to ${shopNameInput}!`);
+    } catch (error) {
+      console.error('Shop setup error:', error);
+      toast.error('Failed to save shop name');
+    } finally {
+      setIsSettingUpShop(false);
     }
   };
 
@@ -201,8 +214,7 @@ export default function App() {
     if (!auth) return;
     try {
       await signOut(auth);
-      // After logout, the onAuthStateChanged will trigger and sign in anonymously again
-      toast.success('Signed out. You are now in guest mode.');
+      toast.success('Logged out successfully!');
     } catch (error) {
       console.error('Logout error:', error);
       toast.error('Failed to log out');
@@ -273,8 +285,108 @@ export default function App() {
     );
   }
 
-  // Remove the "if (!user)" check to allow anonymous access
-  // if (!user) { ... }
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-stone-50 p-4">
+        <Toaster position="top-right" />
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-stone-200 animate-in fade-in slide-in-from-bottom-10 duration-700">
+          <div className="bg-emerald-600 p-10 text-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-16 -translate-y-16 blur-3xl"></div>
+              <div className="absolute bottom-0 right-0 w-32 h-32 bg-white rounded-full translate-x-16 translate-y-16 blur-3xl"></div>
+            </div>
+            <div className="relative z-10 flex justify-center mb-6">
+              <div className="bg-white/20 p-4 rounded-2xl backdrop-blur-sm border border-white/30 rotate-3 hover:rotate-0 transition-transform duration-300 shadow-xl shadow-emerald-900/20">
+                <Store className="w-12 h-12 text-white" />
+              </div>
+            </div>
+            <h1 className="relative z-10 text-3xl font-black text-white tracking-tight">Store Mate</h1>
+            <p className="relative z-10 text-emerald-100 mt-2 font-medium">Your ultimate shop companion</p>
+          </div>
+
+          <div className="p-8">
+            <h2 className="text-2xl font-bold text-stone-900 mb-6 text-center">
+              {isSignUp ? 'Create your account' : 'Welcome back!'}
+            </h2>
+
+            <form onSubmit={handleAuth} className="space-y-4">
+              {isSignUp && (
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="John Doe"
+                    className="w-full px-5 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                  />
+                </div>
+              )}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="w-full px-5 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-stone-500 uppercase tracking-wider ml-1">Password</label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-5 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoggingIn}
+                className="w-full bg-stone-900 text-white py-4 px-6 rounded-xl font-bold hover:bg-stone-800 transition-all shadow-xl active:scale-95 disabled:opacity-70 disabled:active:scale-100 flex items-center justify-center gap-2 mt-6"
+              >
+                {isLoggingIn ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                ) : (
+                  isSignUp ? 'Create Account' : 'Sign In'
+                )}
+              </button>
+            </form>
+
+            <div className="mt-8 text-center">
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-stone-500 hover:text-emerald-600 font-semibold transition-colors text-sm"
+              >
+                {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-stone-50 p-6 border-t border-stone-100 grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-emerald-600 font-bold text-lg">Fast</div>
+              <div className="text-[10px] text-stone-400 uppercase font-bold">Setup</div>
+            </div>
+            <div className="text-center border-x border-stone-100">
+              <div className="text-emerald-600 font-bold text-lg">Secure</div>
+              <div className="text-[10px] text-stone-400 uppercase font-bold">Data</div>
+            </div>
+            <div className="text-center">
+              <div className="text-emerald-600 font-bold text-lg">Free</div>
+              <div className="text-[10px] text-stone-400 uppercase font-bold">Forever</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -406,31 +518,20 @@ export default function App() {
           <div className="bg-stone-50 rounded-2xl p-4 mb-4">
             <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">Shopkeeper</p>
             <p className="text-sm font-bold text-stone-900 truncate">
-              {user?.isAnonymous ? 'Guest User' : (userProfile?.name || user?.displayName)}
+              {userProfile?.name || user?.displayName || 'User'}
             </p>
             <p className="text-xs text-stone-500 truncate">
-              {user?.isAnonymous ? 'Local Session' : (userProfile?.shopName || 'My Store')}
+              {userProfile?.shopName || 'My Store'}
             </p>
           </div>
           
-          {user?.isAnonymous ? (
-            <button
-              onClick={handleLogin}
-              disabled={isLoggingIn}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-emerald-600 hover:bg-emerald-50 transition-all"
-            >
-              <UsersIcon className="w-5 h-5" />
-              {isLoggingIn ? 'Connecting...' : 'Sync with Google'}
-            </button>
-          ) : (
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-600 hover:bg-red-50 transition-all"
-            >
-              <LogOut className="w-5 h-5" />
-              Sign Out
-            </button>
-          )}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-600 hover:bg-red-50 transition-all"
+          >
+            <LogOut className="w-5 h-5" />
+            Sign Out
+          </button>
         </div>
       </aside>
 

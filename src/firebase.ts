@@ -1,6 +1,6 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, getDocFromServer, doc } from 'firebase/firestore';
 
 // Firebase configuration
 // We use environment variables for Vercel, and hardcoded fallbacks for AI Studio preview.
@@ -11,7 +11,6 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "gen-lang-client-0012447913.firebasestorage.app",
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "405144155162",
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:405144155162:web:2fe2210859e6c070c0cda3",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "",
   firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-d7ac27af-19d5-4639-9b48-d27cfe2ebd56"
 };
 
@@ -29,3 +28,16 @@ try {
 
 export const db = app ? getFirestore(app, firebaseConfig.firestoreDatabaseId) : null as any;
 export const auth = app ? getAuth(app) : null as any;
+
+// Test connection to Firestore
+async function testConnection() {
+  if (!db) return;
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.error("Please check your Firebase configuration. The client is offline.");
+    }
+  }
+}
+testConnection();
