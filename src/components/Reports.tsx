@@ -49,6 +49,7 @@ export default function Reports({ products, sales }: ReportsProps) {
   const totalInventoryValue = products.reduce((acc, curr) => acc + (curr.purchasePrice * curr.quantity), 0);
   const totalPotentialRevenue = products.reduce((acc, curr) => acc + (curr.sellingPrice * curr.quantity), 0);
   const totalProfitPotential = totalPotentialRevenue - totalInventoryValue;
+  const totalActualProfit = sales.reduce((acc, curr) => acc + (curr.totalPrice - (curr.purchasePrice * curr.quantity)), 0);
 
   return (
     <div className="space-y-4 lg:space-y-8 animate-in fade-in duration-500">
@@ -64,7 +65,7 @@ export default function Reports({ products, sales }: ReportsProps) {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
         <div className="bg-white p-4 lg:p-6 rounded-2xl border border-stone-200 shadow-sm">
           <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-4">
             <div className="bg-blue-50 p-1.5 lg:p-2 rounded-lg">
@@ -80,10 +81,20 @@ export default function Reports({ products, sales }: ReportsProps) {
             <div className="bg-emerald-50 p-1.5 lg:p-2 rounded-lg">
               <TrendingUp className="w-4 h-4 lg:w-5 lg:h-5 text-emerald-600" />
             </div>
+            <span className="font-bold text-stone-900 text-sm lg:text-base">Actual Profit</span>
+          </div>
+          <p className="text-2xl lg:text-3xl font-bold text-emerald-600">₹{totalActualProfit.toLocaleString()}</p>
+          <p className="text-[10px] lg:text-xs text-stone-500 mt-0.5 lg:mt-1">Net earnings from sales</p>
+        </div>
+        <div className="bg-white p-4 lg:p-6 rounded-2xl border border-stone-200 shadow-sm">
+          <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-4">
+            <div className="bg-orange-50 p-1.5 lg:p-2 rounded-lg">
+              <TrendingUp className="w-4 h-4 lg:w-5 lg:h-5 text-orange-600" />
+            </div>
             <span className="font-bold text-stone-900 text-sm lg:text-base">Potential Profit</span>
           </div>
-          <p className="text-2xl lg:text-3xl font-bold text-emerald-600">₹{totalProfitPotential.toLocaleString()}</p>
-          <p className="text-[10px] lg:text-xs text-stone-500 mt-0.5 lg:mt-1">Expected profit</p>
+          <p className="text-2xl lg:text-3xl font-bold text-orange-600">₹{totalProfitPotential.toLocaleString()}</p>
+          <p className="text-[10px] lg:text-xs text-stone-500 mt-0.5 lg:mt-1">Expected profit from stock</p>
         </div>
         <div className="bg-white p-4 lg:p-6 rounded-2xl border border-stone-200 shadow-sm">
           <div className="flex items-center gap-2 lg:gap-3 mb-2 lg:mb-4">
@@ -182,7 +193,7 @@ export default function Reports({ products, sales }: ReportsProps) {
                 }
                 acc[curr.productId].units += curr.quantity;
                 acc[curr.productId].revenue += curr.totalPrice;
-                acc[curr.productId].profit += (curr.sellingPrice - acc[curr.productId].purchasePrice) * curr.quantity;
+                acc[curr.productId].profit += curr.totalPrice - (curr.purchasePrice * curr.quantity);
                 return acc;
               }, {})).sort((a: any, b: any) => b.revenue - a.revenue).slice(0, 5).map((item: any, i) => (
                 <tr key={i} className="hover:bg-stone-50 transition-colors">

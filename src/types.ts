@@ -18,6 +18,7 @@ export interface Sale {
   productId: string;
   productName: string;
   quantity: number;
+  purchasePrice: number;
   sellingPrice: number;
   totalPrice: number;
   timestamp: string;

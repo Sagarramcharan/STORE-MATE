@@ -57,6 +57,7 @@ export default function Dashboard({ products, sales, onNavigate, userId }: Dashb
   });
 
   const todayRevenue = todaySales.reduce((acc, curr) => acc + curr.totalPrice, 0);
+  const todayProfit = todaySales.reduce((acc, curr) => acc + (curr.totalPrice - (curr.purchasePrice * curr.quantity)), 0);
 
   // Search for products for the quick sale
   const searchResults = saleSearch.length > 1 
@@ -77,6 +78,7 @@ export default function Dashboard({ products, sales, onNavigate, userId }: Dashb
         productId: selectedProduct.id!,
         productName: selectedProduct.name,
         quantity: saleQuantity,
+        purchasePrice: selectedProduct.purchasePrice,
         sellingPrice: selectedProduct.sellingPrice,
         totalPrice: selectedProduct.sellingPrice * saleQuantity,
         timestamp: new Date().toISOString(),
@@ -141,6 +143,14 @@ export default function Dashboard({ products, sales, onNavigate, userId }: Dashb
       color: 'bg-emerald-500', 
       textColor: 'text-emerald-600',
       bgColor: 'bg-emerald-50'
+    },
+    { 
+      label: 'Today\'s Profit', 
+      value: `₹${todayProfit.toLocaleString()}`, 
+      icon: TrendingUp, 
+      color: 'bg-blue-500', 
+      textColor: 'text-blue-600',
+      bgColor: 'bg-blue-50'
     },
     { 
       label: 'Low Stock', 

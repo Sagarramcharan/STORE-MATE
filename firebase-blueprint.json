@@ -27,12 +27,13 @@
         "productId": { "type": "string", "description": "The ID of the product sold." },
         "productName": { "type": "string", "description": "The name of the product sold." },
         "quantity": { "type": "number", "description": "The quantity sold." },
+        "purchasePrice": { "type": "number", "description": "The purchase price of the product at the time of sale." },
         "sellingPrice": { "type": "number", "description": "The price at which the product was sold." },
         "totalPrice": { "type": "number", "description": "The total price of the sale (quantity * sellingPrice)." },
         "timestamp": { "type": "string", "format": "date-time", "description": "The timestamp of the sale." },
         "userId": { "type": "string", "description": "The ID of the shopkeeper who made the sale." }
       },
-      "required": ["productId", "productName", "quantity", "sellingPrice", "totalPrice", "timestamp", "userId"]
+      "required": ["productId", "productName", "quantity", "purchasePrice", "sellingPrice", "totalPrice", "timestamp", "userId"]
     },
     "User": {
       "title": "User",
