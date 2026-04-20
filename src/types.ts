@@ -31,6 +31,7 @@ export interface UserProfile {
   email: string;
   role: 'admin';
   shopName?: string;
+  onboardingComplete?: boolean;
 }
 
 export enum OperationType {

@@ -76,7 +76,7 @@ export default function App() {
       if (user) {
         setUser(user);
         const isUserAdmin = user.email?.toLowerCase() === 'sagarsatapathy24@gmail.com';
-        if (isUserAdmin) {
+        if (isUserAdmin && activeTab === 'dashboard') {
           setActiveTab('admin');
         }
         await fetchUserProfile(user.uid, user.email || '', user.displayName || 'User');
@@ -162,8 +162,8 @@ export default function App() {
       if (userDoc.exists()) {
         const profile = userDoc.data() as UserProfile;
         setUserProfile(profile);
-        // Show setup if shop name is default
-        if (profile.shopName === 'My Store' || !profile.shopName) {
+        // Show setup if onboarding is not complete
+        if (!profile.onboardingComplete) {
           setShowShopSetup(true);
         }
       } else {
@@ -171,7 +171,8 @@ export default function App() {
           name,
           email,
           role: 'admin',
-          shopName: 'My Store'
+          shopName: 'My Store',
+          onboardingComplete: false
         };
         await setDoc(doc(db, 'users', uid), newProfile);
         setUserProfile(newProfile);
@@ -477,7 +478,15 @@ export default function App() {
       case 'admin':
         return <AdminDashboard users={allUsers} allProducts={allProducts} allSales={allSales} />;
       case 'dashboard':
-        return <Dashboard products={products} sales={sales} onNavigate={setActiveTab} userId={user.uid} />;
+        return (
+          <Dashboard 
+            products={products} 
+            sales={sales} 
+            onNavigate={setActiveTab} 
+            userId={user.uid} 
+            userName={userProfile?.name}
+          />
+        );
       case 'inventory':
         return <Inventory products={products} userId={user.uid} />;
       case 'sales':

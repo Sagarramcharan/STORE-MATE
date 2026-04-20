@@ -25,8 +25,11 @@ export default function ShopSetupModal({ uid, profile, onComplete }: ShopSetupMo
 
     setIsSubmitting(true);
     try {
-      const updatedProfile = { ...profile, shopName: shopName.trim() };
-      await updateDoc(doc(db, 'users', uid), { shopName: shopName.trim() });
+      const updatedProfile = { ...profile, shopName: shopName.trim(), onboardingComplete: true };
+      await updateDoc(doc(db, 'users', uid), { 
+        shopName: shopName.trim(),
+        onboardingComplete: true
+      });
       toast.success('Welcome to Store Mate!');
       onComplete(updatedProfile);
     } catch (error) {

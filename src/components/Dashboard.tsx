@@ -31,9 +31,10 @@ interface DashboardProps {
   sales: Sale[];
   onNavigate: (tab: string) => void;
   userId: string;
+  userName?: string;
 }
 
-export default function Dashboard({ products, sales, onNavigate, userId }: DashboardProps) {
+export default function Dashboard({ products, sales, onNavigate, userId, userName }: DashboardProps) {
   const [saleSearch, setSaleSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [saleQuantity, setSaleQuantity] = useState(1);
@@ -175,7 +176,7 @@ export default function Dashboard({ products, sales, onNavigate, userId }: Dashb
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-stone-900">Dashboard</h1>
-          <p className="text-sm text-stone-500">Welcome back! Here's what's happening with your store.</p>
+          <p className="text-sm text-stone-500">Welcome back{userName ? `, ${userName}` : ''}! Here's what's happening with your store.</p>
         </div>
         <div className="flex items-center gap-2 lg:gap-3">
           <button 
