@@ -82,6 +82,7 @@ export default function Sales({ products, sales, userId }: SalesProps) {
           productId: item.product.id!,
           productName: item.product.name,
           quantity: item.quantity,
+          purchasePrice: item.product.purchasePrice,
           sellingPrice: item.product.sellingPrice,
           totalPrice: item.product.sellingPrice * item.quantity,
           timestamp: new Date().toISOString(),

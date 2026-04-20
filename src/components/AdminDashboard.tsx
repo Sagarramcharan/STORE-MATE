@@ -37,14 +37,14 @@ export default function AdminDashboard({ users, allProducts, allSales }: AdminDa
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
 
   const totalRevenue = allSales.reduce((acc, curr) => acc + curr.totalPrice, 0);
-  const totalProfit = allSales.reduce((acc, curr) => acc + (curr.totalPrice - (curr.purchasePrice * curr.quantity)), 0);
+  const totalProfit = allSales.reduce((acc, curr) => acc + (curr.totalPrice - ((curr.purchasePrice || 0) * curr.quantity)), 0);
   
   // Stats per user
   const userStats = users.map(user => {
     const userProducts = allProducts.filter(p => p.userId === user.id);
     const userSales = allSales.filter(s => s.userId === user.id);
     const userRevenue = userSales.reduce((acc, curr) => acc + curr.totalPrice, 0);
-    const userProfit = userSales.reduce((acc, curr) => acc + (curr.totalPrice - (curr.purchasePrice * curr.quantity)), 0);
+    const userProfit = userSales.reduce((acc, curr) => acc + (curr.totalPrice - ((curr.purchasePrice || 0) * curr.quantity)), 0);
     
     return {
       ...user,
@@ -62,7 +62,7 @@ export default function AdminDashboard({ users, allProducts, allSales }: AdminDa
     const shopProducts = allProducts.filter(p => p.userId === selectedShopId);
     const shopSales = allSales.filter(s => s.userId === selectedShopId);
     const shopRevenue = shopSales.reduce((acc, curr) => acc + curr.totalPrice, 0);
-    const shopProfit = shopSales.reduce((acc, curr) => acc + (curr.totalPrice - (curr.purchasePrice * curr.quantity)), 0);
+    const shopProfit = shopSales.reduce((acc, curr) => acc + (curr.totalPrice - ((curr.purchasePrice || 0) * curr.quantity)), 0);
 
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = subDays(new Date(), 6 - i);
@@ -72,7 +72,7 @@ export default function AdminDashboard({ users, allProducts, allSales }: AdminDa
         return saleDate >= startOfDay(date) && saleDate <= endOfDay(date);
       });
       const revenue = daySales.reduce((acc, curr) => acc + curr.totalPrice, 0);
-      const profit = daySales.reduce((acc, curr) => acc + (curr.totalPrice - (curr.purchasePrice * curr.quantity)), 0);
+      const profit = daySales.reduce((acc, curr) => acc + (curr.totalPrice - ((curr.purchasePrice || 0) * curr.quantity)), 0);
       return { name: dayLabel, revenue, profit };
     });
 
@@ -198,7 +198,7 @@ export default function AdminDashboard({ users, allProducts, allSales }: AdminDa
                     <td className="px-6 py-4 text-sm text-stone-600">₹{p.purchasePrice}</td>
                     <td className="px-6 py-4 text-sm text-stone-600">₹{p.sellingPrice}</td>
                     <td className="px-6 py-4 text-right font-bold text-emerald-600 text-sm">
-                      ₹{(p.sellingPrice - p.purchasePrice) * p.quantity}
+                      ₹{(p.sellingPrice - (p.purchasePrice || 0)) * p.quantity}
                     </td>
                   </tr>
                 ))}

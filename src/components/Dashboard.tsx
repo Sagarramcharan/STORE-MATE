@@ -57,7 +57,7 @@ export default function Dashboard({ products, sales, onNavigate, userId }: Dashb
   });
 
   const todayRevenue = todaySales.reduce((acc, curr) => acc + curr.totalPrice, 0);
-  const todayProfit = todaySales.reduce((acc, curr) => acc + (curr.totalPrice - (curr.purchasePrice * curr.quantity)), 0);
+  const todayProfit = todaySales.reduce((acc, curr) => acc + (curr.totalPrice - ((curr.purchasePrice || 0) * curr.quantity)), 0);
 
   // Search for products for the quick sale
   const searchResults = saleSearch.length > 1 

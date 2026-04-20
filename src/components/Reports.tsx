@@ -46,10 +46,10 @@ export default function Reports({ products, sales }: ReportsProps) {
     return acc;
   }, []);
 
-  const totalInventoryValue = products.reduce((acc, curr) => acc + (curr.purchasePrice * curr.quantity), 0);
+  const totalInventoryValue = products.reduce((acc, curr) => acc + ((curr.purchasePrice || 0) * curr.quantity), 0);
   const totalPotentialRevenue = products.reduce((acc, curr) => acc + (curr.sellingPrice * curr.quantity), 0);
   const totalProfitPotential = totalPotentialRevenue - totalInventoryValue;
-  const totalActualProfit = sales.reduce((acc, curr) => acc + (curr.totalPrice - (curr.purchasePrice * curr.quantity)), 0);
+  const totalActualProfit = sales.reduce((acc, curr) => acc + (curr.totalPrice - ((curr.purchasePrice || 0) * curr.quantity)), 0);
 
   return (
     <div className="space-y-4 lg:space-y-8 animate-in fade-in duration-500">
@@ -193,7 +193,7 @@ export default function Reports({ products, sales }: ReportsProps) {
                 }
                 acc[curr.productId].units += curr.quantity;
                 acc[curr.productId].revenue += curr.totalPrice;
-                acc[curr.productId].profit += curr.totalPrice - (curr.purchasePrice * curr.quantity);
+                acc[curr.productId].profit += curr.totalPrice - ((curr.purchasePrice || 0) * curr.quantity);
                 return acc;
               }, {})).sort((a: any, b: any) => b.revenue - a.revenue).slice(0, 5).map((item: any, i) => (
                 <tr key={i} className="hover:bg-stone-50 transition-colors">

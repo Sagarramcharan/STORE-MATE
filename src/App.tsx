@@ -521,9 +521,10 @@ export default function App() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-[280px] lg:static lg:inset-auto lg:z-0 lg:w-72 bg-white border-r border-stone-200 flex flex-col
-        transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
-        transition-transform duration-300 ease-in-out h-full lg:h-screen sticky top-0
+        fixed inset-y-0 left-0 z-50 w-[280px] bg-white border-r border-stone-200 flex flex-col
+        transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+        transition-transform duration-300 ease-in-out h-full
+        lg:static lg:inset-auto lg:z-0 lg:w-72 lg:translate-x-0 lg:h-screen lg:sticky lg:top-0
       `}>
         {/* Sidebar Header (Mobile only) */}
         <div className="p-4 flex items-center justify-between border-b border-stone-100 lg:hidden">
