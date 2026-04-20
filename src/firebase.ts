@@ -2,8 +2,17 @@ import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, getDocFromServer, doc } from 'firebase/firestore';
 
-// Import the Firebase configuration
-import firebaseConfig from '../firebase-applet-config.json';
+// Firebase configuration using environment variables with fallbacks
+// This ensures the app builds on Vercel even if the local config file is missing
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyB41DvBQsoN6ZbeSwo6UriMFPDrScQBCGQ",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "gen-lang-client-0012447913.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "gen-lang-client-0012447913",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "gen-lang-client-0012447913.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "405144155162",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:405144155162:web:2fe2210859e6c070c0cda3",
+  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-d7ac27af-19d5-4639-9b48-d27cfe2ebd56"
+};
 
 // Initialize Firebase
 let app;
